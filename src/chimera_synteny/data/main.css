@@ -1,0 +1,42 @@
+html {
+    font-family: sans-serif;
+    background: #f1f1f1;
+}
+
+.figureContainer {
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.figureAndHeaderContainer,
+#dropdownContainer {
+    border: 1px solid lightgray;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: white;
+    box-shadow: 0px 0px 10px lightgray;
+}
+
+.mscapeDropdown {
+    padding: 5px;
+    margin: 5px;
+}
+
+#dropdownContainer label {
+    margin-top: 15px;
+}
+
+#dropdownContainer label:first-child {
+    margin-top: 0px;
+}
+
+.hideEmptyContainer {
+    display: none;
+}
+
+#resetBtn {
+    padding: 5px;
+    margin: 5px;
+}

@@ -1,49 +1,28 @@
-[project] # Update all fields in this section
-name = "mscape_template"  # Change this to your package - it must match module name in src
-dynamic = ["version"]  # Change the version in __init__.py in the package directory.
-description = "Short description here"
-authors = [{name = "Author name", email = "email.address@example.com"}]
-requires-python = ">=3.12"
-# Pin versions of possibly unstable dependencies or packages (especially internal)
-dependencies = ["pandas", "pyyaml", "climb-onyx-client"]  
-
-[tool.setuptools.dynamic]
-version = {attr = "mscape_template.__version__"} # Add package name here to get version
-
-[project.optional-dependencies] # Dependencies for developers only - add more if required
-dev = ["ruff", "pytest", "pre-commit"]
-
-[build-system] # Leave this section
-requires = ["setuptools"]
+[build-system]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[project.scripts] # Update with main repo script here
-qc_sample = "mscape_template.mscape_script:main"
+[project]
+name = "chimera-synteny"
+dynamic = ["version"]
+authors = [{ name = "Ashley Shalloe", email = "ashley.shalloe@ukhsa.gov.uk" }]
+description = "Generates a HTML report with synteny plots, given CLIMB IDs as input"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyfunctional>=1.5.0", "pandas>=2.2.3", "biopython>=1.85", "tqdm", "climb-onyx-client", "plotly>=6.1.2", "taxaplease@git+https://github.com/ukhsa-collaboration/gpha-mscape-taxaplease"]
 
-[tool.ruff.lint] # Lint rules to follow - add or delete if required
-select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # comprehesnions
-    "C4",
-    # pathlib
-    "PTH",
-]
+[project.urls]
+Homepage = "https://github.com/ukhsa-collaboration"
+Issues = "https://github.com/ukhsa-collaboration"
 
-ignore = ["E501"] # Lint rules to ignore - add or remove as required
+[project.scripts]
+chimera-synteny = "chimera_synteny.synteny:main"
 
-[tool.ruff]
-line-length = 120
+[tool.setuptools.dynamic]
+version = { attr = "chimera_synteny.synteny.__version__" }
 
-[tool.ruff.format]
-quote-style = "double"
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+chimera_synteny = ["data/*.css", "data/*.js", "data/*.txt"]
