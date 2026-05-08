@@ -10,6 +10,7 @@ None
 
 * Orthomyxoviridae segment numbers automatically mapped to segment names.
 * Dropdown entries are sorted alphabetically
+* Script now prints more status info while running
 
 ### Fixed
 

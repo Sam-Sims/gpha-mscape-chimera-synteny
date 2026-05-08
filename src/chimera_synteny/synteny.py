@@ -444,11 +444,13 @@ def generate_report(
     Path(outdir).mkdir(exist_ok=True)
 
     ## get the chimera URIs
+    print(f"{datetime.datetime.now()} Querying Onyx...")
     climb_id_to_chimera_uri_df = get_chimera_bam_uri_by_climb_id(
         list_of_climb_ids_to_process
     )
 
     ## download and process bams in parallel
+    print(f"{datetime.datetime.now()} Retrieving bams and generating pileups")
     pileup_filepath_list = pseq(list(climb_id_to_chimera_uri_df["chimera_bam"])).map(
         lambda x: process_bam_uri_to_pileup_gz(x, outdir=outdir)
     )
@@ -475,7 +477,11 @@ def generate_report(
             )
         )
 
-        for pileup in tqdm(pileup_filepath_list):
+        print(f"{datetime.datetime.now()} Processing pileups into figures")
+
+        for pileup in tqdm(
+            pileup_filepath_list, total=len(list_of_climb_ids_to_process)
+        ):
             outhtml.write("<div class='figureAndHeaderContainer'>\n")
             outhtml.write(f"<h2>{os.path.basename(pileup)}</h2>\n")
             outhtml.write("<div class='figureContainer'>\n")
@@ -513,7 +519,7 @@ def generate_report(
             )
         )
 
-    print(f"Report written to {outreportpath}")
+    print(f"{datetime.datetime.now()} Report written to {outreportpath}")
 
 
 def main():
