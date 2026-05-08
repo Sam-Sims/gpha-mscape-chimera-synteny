@@ -127,7 +127,7 @@ function filterEmptyContainersByFamily(inputFamily) {
 
     // hide the empty ones
     ;[...document.getElementsByClassName("figureAndHeaderContainer")].forEach(x => {
-        if (!x.querySelectorAll(`div.plotly-graph-div[data-family-taxon=${inputFamily}]`).length) {
+        if (!x.querySelectorAll(`div.plotly-graph-div[data-family-taxon='${inputFamily}']`).length) {
             x.classList.add("hideEmptyContainer")
         }
     })
