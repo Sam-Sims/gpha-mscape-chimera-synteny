@@ -352,9 +352,14 @@ def process_pileup_into_figure_array(
         if suppress_tmv and (rank == "Virgaviridae"):
             continue
 
+        try:
+            temp_df = temp_df.sort_values("segment")
+        except:
+            print(f"Non-fatal error: cannot sort segments for {pileup}")
+
         # print(rank)
         fig = px.scatter(
-            temp_df.sort_values("segment"),
+            temp_df,
             x="pos_ratio_bin",
             y="taxon",
             color="depth",
