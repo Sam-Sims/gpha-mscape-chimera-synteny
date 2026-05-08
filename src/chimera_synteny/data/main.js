@@ -100,7 +100,7 @@ function filterShowPlotsByFamily(inputFamily) {
             div.plotly-graph-div{
                 display: none;
             }
-            div.plotly-graph-div[data-family-taxon=${inputFamily}]{
+            div.plotly-graph-div[data-family-taxon='${inputFamily}']{
                 display: block;
             }
         `
