@@ -8,7 +8,8 @@ None
 
 ### Changed
 
-Orthomyxoviridae segment numbers automatically mapped to segment names.
+* Orthomyxoviridae segment numbers automatically mapped to segment names.
+* Dropdown entries are sorted alphabetically
 
 ### Fixed
 

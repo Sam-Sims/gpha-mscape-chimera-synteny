@@ -58,7 +58,7 @@ class MscapeDropdownLabel {
 function initDropdowns() {
     var dropdownElmsArray = []
 
-    var mscapeConfig = { "family": { "values": [...familyTaxonSet] } }
+    var mscapeConfig = { "family": { "values": [...familyTaxonSet].toSorted() } }
 
     for (var dropdown in mscapeConfig) {
         dropdownElmsArray.push(
