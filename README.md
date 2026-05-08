@@ -4,6 +4,13 @@
 
 An argparse tool that generates a HTML report with synteny plots, given CLIMB IDs as input.
 
+## Installation?
+
+```bash
+## pip install straight from the github repo
+pip install git+https://github.com/ukhsa-collaboration/gpha-mscape-chimera-synteny.git
+```
+
 ## How do I use this?
 
 After pip installing, you can run it directly from the commandline:
