@@ -17,10 +17,6 @@ from taxaplease import TaxaPlease
 from tqdm import tqdm
 from functional import pseq
 
-pd.options.display.max_columns = 0
-pd.options.mode.copy_on_write = True
-pd.set_option("display.max_colwidth", 0)
-
 # Set up config
 config = OnyxConfig(
     domain=os.environ[OnyxEnv.DOMAIN],
@@ -29,7 +25,7 @@ config = OnyxConfig(
 
 tp = TaxaPlease()
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 ###########
 # Globals #
@@ -149,9 +145,7 @@ def process_bam_uri_to_pileup_gz(input_bam_uri, *, outdir=None):
 
         cmd = f"{SAMTOOLS_CMD} mpileup -a {shlex.quote(bam_file)} | cut -f 1,2,4 | gzip > {shlex.quote(outfilepath)}"
 
-        os.system(
-            cmd
-        )
+        os.system(cmd)
 
     return outfilepath
 
@@ -197,7 +191,7 @@ def get_taxid_from_ncbi_accession(ncbi_accession_list):
     return return_result
 
 
-def update_lookup_do_not_use(pileup_df):
+def update_lookup_in_place(pileup_df):
     try:
         ncbi_accession_set = set(pileup_df["accession"])
 
@@ -255,7 +249,8 @@ def process_pileup_into_figure_array(
     suppress_tmv=False,
 ):
     """
-    Relies on some side-effects and naughty code. Be careful.
+    Relies on some side-effects and code that self-modifies the package.
+    Be careful!
 
     Takes in a path to a samtools mpileup dump
     Figures out what references are in the pileup and makes per ref
@@ -284,14 +279,22 @@ def process_pileup_into_figure_array(
     ## read in the pileup
     pileup_df = pd.read_csv(pileup, sep="\t", names=["accession", "position", "depth"])
 
-    ## don't do this
-    update_lookup_do_not_use(pileup_df)
+    ## update installed lookup.txt
+    update_lookup_in_place(pileup_df)
 
     ## group by accession, add in metadata
     ## then reconcatenate the data
-    concat_df = pd.concat(
-        [process_df(df) for accession, df in pileup_df.groupby("accession")]
-    )
+    try:
+        concat_df = pd.concat(
+            [process_df(df) for accession, df in pileup_df.groupby("accession")]
+        )
+    except Exception as e:
+        ## most likely excpetion is that there is nothing to concatenate
+        ## so we return an empty list to allow things to progress
+        ## printing the error as we go so it isn't completely silent
+        print(f"Non-fatal error processing {pileup}")
+        print(e)
+        return []
 
     ## get accession to taxid mappings
     accession_lookup_dict = pd.read_csv(
@@ -349,9 +352,14 @@ def process_pileup_into_figure_array(
         if suppress_tmv and (rank == "Virgaviridae"):
             continue
 
+        try:
+            temp_df = temp_df.sort_values("segment")
+        except:
+            print(f"Non-fatal error: cannot sort segments for {pileup}")
+
         # print(rank)
         fig = px.scatter(
-            temp_df.sort_values("segment"),
+            temp_df,
             x="pos_ratio_bin",
             y="taxon",
             color="depth",
@@ -436,11 +444,13 @@ def generate_report(
     Path(outdir).mkdir(exist_ok=True)
 
     ## get the chimera URIs
+    print(f"{datetime.datetime.now()} Querying Onyx...")
     climb_id_to_chimera_uri_df = get_chimera_bam_uri_by_climb_id(
         list_of_climb_ids_to_process
     )
 
     ## download and process bams in parallel
+    print(f"{datetime.datetime.now()} Retrieving bams and generating pileups")
     pileup_filepath_list = pseq(list(climb_id_to_chimera_uri_df["chimera_bam"])).map(
         lambda x: process_bam_uri_to_pileup_gz(x, outdir=outdir)
     )
@@ -467,7 +477,11 @@ def generate_report(
             )
         )
 
-        for pileup in tqdm(pileup_filepath_list):
+        print(f"{datetime.datetime.now()} Processing pileups into figures")
+
+        for pileup in tqdm(
+            pileup_filepath_list, total=len(list_of_climb_ids_to_process)
+        ):
             outhtml.write("<div class='figureAndHeaderContainer'>\n")
             outhtml.write(f"<h2>{os.path.basename(pileup)}</h2>\n")
             outhtml.write("<div class='figureContainer'>\n")
@@ -505,11 +519,12 @@ def generate_report(
             )
         )
 
-    print(f"Report written to {outreportpath}")
+    print(f"{datetime.datetime.now()} Report written to {outreportpath}")
+
 
 def main():
     global ENTREZ_EMAIL
-    
+
     args = init_argparser().parse_args()
 
     ENTREZ_EMAIL = args.email

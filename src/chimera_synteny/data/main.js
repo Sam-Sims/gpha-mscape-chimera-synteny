@@ -58,7 +58,7 @@ class MscapeDropdownLabel {
 function initDropdowns() {
     var dropdownElmsArray = []
 
-    var mscapeConfig = { "family": { "values": [...familyTaxonSet] } }
+    var mscapeConfig = { "family": { "values": [...familyTaxonSet].toSorted() } }
 
     for (var dropdown in mscapeConfig) {
         dropdownElmsArray.push(
@@ -100,7 +100,7 @@ function filterShowPlotsByFamily(inputFamily) {
             div.plotly-graph-div{
                 display: none;
             }
-            div.plotly-graph-div[data-family-taxon=${inputFamily}]{
+            div.plotly-graph-div[data-family-taxon='${inputFamily}']{
                 display: block;
             }
         `
@@ -127,7 +127,7 @@ function filterEmptyContainersByFamily(inputFamily) {
 
     // hide the empty ones
     ;[...document.getElementsByClassName("figureAndHeaderContainer")].forEach(x => {
-        if (!x.querySelectorAll(`div.plotly-graph-div[data-family-taxon=${inputFamily}]`).length) {
+        if (!x.querySelectorAll(`div.plotly-graph-div[data-family-taxon='${inputFamily}']`).length) {
             x.classList.add("hideEmptyContainer")
         }
     })
@@ -142,4 +142,30 @@ function filterEmptyContainersByFamily(inputFamily) {
     }
 }
 
-initDropdowns();
+function mapOrthomyxoSegmentNumbersToNames(){
+    var segmentArray = ["PB2", "PB1", "PA", "HA", "NP", "NA", "M", "NS"]
+    var elms = document.querySelectorAll("div.plotly-graph-div[data-family-taxon=Orthomyxoviridae]")
+
+    ;[...elms].forEach(x => {
+        if (!x.orthomyxoSegmentIsMapped){
+            x.layout.annotations.forEach(y => {
+                var segment_number = parseInt(y.text.split("=")[1])
+                var segment_name = segmentArray[segment_number - 1]
+                y.text = `segment=${segment_name}`
+            })
+
+            x.orthomyxoSegmentIsMapped = true
+
+            Plotly.relayout(x, x.layout)
+        }
+    })
+}
+
+// init
+
+function init(){
+    initDropdowns();
+    mapOrthomyxoSegmentNumbersToNames();
+}
+
+init();
