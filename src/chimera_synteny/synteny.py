@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import importlib
+from importlib import resources
 import argparse
 import datetime
 import os
@@ -417,18 +417,17 @@ def figure_array_to_html(
 
 
 def get_js_text():
-    with importlib.resources.path("chimera_synteny", "data/main.js") as f:
-        return f.read_text()
+    return resources.files("chimera_synteny.data").joinpath("main.js").read_text()
 
 
 def get_css_text():
-    with importlib.resources.path("chimera_synteny", "data/main.css") as f:
-        return f.read_text()
+    return resources.files("chimera_synteny.data").joinpath("main.css").read_text()
 
 
 def get_lookup_path():
-    with importlib.resources.path("chimera_synteny", "data/lookup.txt") as f:
-        return str(f)
+    return str(
+        resources.files("chimera_synteny.data").joinpath("lookup.txt")
+    )
 
 
 def generate_report(
