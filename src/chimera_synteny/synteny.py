@@ -85,6 +85,11 @@ def init_argparser():
         help="Allow Virgaviridae in output (Tobacco Mosaic Virus)",
         action="store_true",
     )
+    parser.add_argument(
+        "--onyx-project",
+        help="Speicfy Onyx project to use (mSCAPE/synthscape",
+        default="mscape"
+    )
 
     return parser
 
@@ -102,7 +107,7 @@ def get_file_from_s3(*, input_s3_uri=None, output_folder=None):
     return str(outfile_path)
 
 
-def get_chimera_bam_uri_by_climb_id(input_climb_id_list):
+def get_chimera_bam_uri_by_climb_id(input_climb_id_list, onyx_project):
     """
     Takes in a list of climb ids
     Returns a dataframe with the columns climb_id and chimera_bam
@@ -118,7 +123,7 @@ def get_chimera_bam_uri_by_climb_id(input_climb_id_list):
     with OnyxClient(config) as client:
         return_data = pd.DataFrame(
             client.query(
-                project="mscape",
+                project=onyx_project,
                 query=(OnyxField(climb_id__in=input_climb_id_list)),
                 include=("climb_id", "chimera_bam"),
             )
@@ -439,6 +444,7 @@ def generate_report(
     suppress_singleton_families=True,
     suppress_phage=True,
     suppress_tmv=True,
+    onyx_project
 ):
     ## make an output directory
     Path(outdir).mkdir(exist_ok=True)
@@ -446,7 +452,7 @@ def generate_report(
     ## get the chimera URIs
     print(f"{datetime.datetime.now()} Querying Onyx...")
     climb_id_to_chimera_uri_df = get_chimera_bam_uri_by_climb_id(
-        list_of_climb_ids_to_process
+        list_of_climb_ids_to_process, onyx_project
     )
 
     ## download and process bams in parallel
@@ -536,6 +542,7 @@ def main():
         suppress_singleton_families=not args.allow_singleton,
         suppress_phage=not args.allow_phage,
         suppress_tmv=not args.allow_tmv,
+        onyx_project=args.onyx_project
     )
 
 
