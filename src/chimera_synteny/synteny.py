@@ -4,6 +4,7 @@ import argparse
 import datetime
 import os
 import shlex
+import shutil
 import subprocess
 import tempfile
 import uuid
@@ -89,6 +90,14 @@ def init_argparser():
     return parser
 
 
+def resolve_samtools_path():
+    samtools_path = shutil.which("samtools")
+    if samtools_path:
+        return shlex.quote(samtools_path)
+
+    return SAMTOOLS_CMD
+
+
 def get_file_from_s3(*, input_s3_uri=None, output_folder=None):
     if not output_folder:
         output_folder = os.getcwd()
@@ -143,7 +152,9 @@ def process_bam_uri_to_pileup_gz(input_bam_uri, *, outdir=None):
         if not bam_file:
             print(f"Failed to retrieve {input_bam_uri}")
 
-        cmd = f"{SAMTOOLS_CMD} mpileup -a {shlex.quote(bam_file)} | cut -f 1,2,4 | gzip > {shlex.quote(outfilepath)}"
+        ## prefer samtools on PATH, otherwise use a conda fallback
+        samtools_cmd = resolve_samtools_path()
+        cmd = f"{samtools_cmd} mpileup -a {shlex.quote(bam_file)} | cut -f 1,2,4 | gzip > {shlex.quote(outfilepath)}"
 
         os.system(cmd)
 
