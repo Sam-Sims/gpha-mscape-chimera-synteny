@@ -18,14 +18,6 @@ from taxaplease import TaxaPlease
 from tqdm import tqdm
 from functional import pseq
 
-# Set up config
-config = OnyxConfig(
-    domain=os.environ[OnyxEnv.DOMAIN],
-    token=os.environ[OnyxEnv.TOKEN],
-)
-
-tp = TaxaPlease()
-
 __version__ = "0.0.2"
 
 ###########
@@ -40,14 +32,12 @@ pd.options.display.max_columns = 0
 pd.options.mode.copy_on_write = True
 pd.set_option("display.max_colwidth", 0)
 
-## set up onyx config
 config = OnyxConfig(
     domain=os.environ[OnyxEnv.DOMAIN],
     token=os.environ[OnyxEnv.TOKEN],
 )
 
-## init taxaplease
-tp = TaxaPlease()
+tp = None
 
 
 #############
@@ -88,8 +78,13 @@ def init_argparser():
     )
     parser.add_argument(
         "--onyx-project",
-        help="Speicfy Onyx project to use (mSCAPE/synthscape",
+        help="Speicfy Onyx project to use (mSCAPE/synthscape)",
         default="mscape"
+    )
+    parser.add_argument(
+        "--database",
+        help="Path to a TaxaPlease database",
+        default=None,
     )
 
     return parser
@@ -545,11 +540,12 @@ def generate_report(
 
 
 def main():
-    global ENTREZ_EMAIL
+    global ENTREZ_EMAIL, tp
 
     args = init_argparser().parse_args()
 
     ENTREZ_EMAIL = args.email
+    tp = TaxaPlease(database=args.database) if args.database else TaxaPlease()
 
     generate_report(
         args.input,
