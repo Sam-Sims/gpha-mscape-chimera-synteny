@@ -152,12 +152,15 @@ def process_bam_uri_to_pileup_gz(input_bam_uri, *, outdir=None):
         return outfilepath
 
     with tempfile.TemporaryDirectory() as tempdir:
-        bam_file = get_file_from_s3(input_s3_uri=input_bam_uri, output_folder=tempdir)
+        if Path(input_bam_uri).is_file():
+            bam_file = input_bam_uri
+        else:
+            bam_file = get_file_from_s3(input_s3_uri=input_bam_uri, output_folder=tempdir)
 
         if not bam_file:
             print(f"Failed to retrieve {input_bam_uri}")
 
-        ## prefer samtools on PATH, otherwise use a conda fallback
+        ## this will prefer samtools on PATH, otherwise uses a conda fallback
         samtools_cmd = resolve_samtools_path()
         cmd = f"{samtools_cmd} mpileup -a {shlex.quote(bam_file)} | cut -f 1,2,4 | gzip > {shlex.quote(outfilepath)}"
 
@@ -447,7 +450,7 @@ def get_lookup_path():
 
 
 def generate_report(
-    list_of_climb_ids_to_process,
+    input,
     *,
     outdir=None,
     suppress_ttv=True,
@@ -459,15 +462,18 @@ def generate_report(
     ## make an output directory
     Path(outdir).mkdir(exist_ok=True)
 
-    ## get the chimera URIs
-    print(f"{datetime.datetime.now()} Querying Onyx...")
-    climb_id_to_chimera_uri_df = get_chimera_bam_uri_by_climb_id(
-        list_of_climb_ids_to_process, onyx_project
-    )
+    local_bams = [x for x in input if Path(x).is_file()]
+    climb_ids  = list(set(input) - set(local_bams))
 
-    ## download and process bams in parallel
+    s3_uris = []
+    if climb_ids:
+        print(f"{datetime.datetime.now()} Querying Onyx...")
+        climb_id_to_chimera_uri_df = get_chimera_bam_uri_by_climb_id(climb_ids, onyx_project)
+        s3_uris = list(climb_id_to_chimera_uri_df["chimera_bam"])
+
+    ## download (if needed) and process bams in parallel
     print(f"{datetime.datetime.now()} Retrieving bams and generating pileups")
-    pileup_filepath_list = pseq(list(climb_id_to_chimera_uri_df["chimera_bam"])).map(
+    pileup_filepath_list = pseq(local_bams + s3_uris).map(
         lambda x: process_bam_uri_to_pileup_gz(x, outdir=outdir)
     )
 
@@ -496,7 +502,7 @@ def generate_report(
         print(f"{datetime.datetime.now()} Processing pileups into figures")
 
         for pileup in tqdm(
-            pileup_filepath_list, total=len(list_of_climb_ids_to_process)
+            pileup_filepath_list, total=len(input)
         ):
             outhtml.write("<div class='figureAndHeaderContainer'>\n")
             outhtml.write(f"<h2>{os.path.basename(pileup)}</h2>\n")
