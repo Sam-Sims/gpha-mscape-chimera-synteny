@@ -32,11 +32,13 @@ pd.options.display.max_columns = 0
 pd.options.mode.copy_on_write = True
 pd.set_option("display.max_colwidth", 0)
 
+## set up onyx config
 config = OnyxConfig(
     domain=os.environ[OnyxEnv.DOMAIN],
     token=os.environ[OnyxEnv.TOKEN],
 )
 
+## init taxaplease as none - to overwrite in main
 tp = None
 
 
